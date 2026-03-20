@@ -2,6 +2,8 @@ import {
   TimeBucket,
   SeasonPhase,
   WaterClarity,
+  LightLevel,
+  PressureTrend,
   type WeatherData,
   type DerivedConditions,
 } from '../engine/types';
@@ -22,7 +24,6 @@ export function deriveSeasonPhase(lat: number, month: number, avgTempF: number):
   const isNorthern = lat >= 0;
   const adjustedMonth = isNorthern ? month : ((month + 5) % 12) + 1;
 
-  // Temperature-adjusted season detection
   if (avgTempF < 45) return SeasonPhase.Winter;
   if (avgTempF >= 45 && avgTempF < 55) {
     return adjustedMonth >= 2 && adjustedMonth <= 4 ? SeasonPhase.PreSpawn : SeasonPhase.Winter;
@@ -37,36 +38,80 @@ export function deriveSeasonPhase(lat: number, month: number, avgTempF: number):
     if (adjustedMonth >= 9 && adjustedMonth <= 11) return SeasonPhase.FallTransition;
     return SeasonPhase.Summer;
   }
-  if (avgTempF >= 75) return SeasonPhase.Summer;
-
   return SeasonPhase.Summer;
 }
 
 export function estimateWaterTemp(airTempF: number, highF: number, lowF: number): number {
-  // Water temp lags air temp; rough heuristic
   const avgAir = (highF + lowF) / 2;
-  // Blend current temp with average, water is slower to change
   return avgAir * 0.7 + airTempF * 0.3 - 3;
 }
 
-export function deriveWaterClarity(precipMm: number, windMph: number): WaterClarity {
-  if (precipMm > 5 || (precipMm > 2 && windMph > 15)) return WaterClarity.Muddy;
-  if (precipMm > 1 || windMph > 20) return WaterClarity.Stained;
+export function deriveWaterClarity(
+  currentPrecipMm: number,
+  precip24hMm: number,
+  precip48hMm: number,
+  windMph: number,
+): WaterClarity {
+  const totalRecent = currentPrecipMm + precip24hMm;
+  if (totalRecent > 10 || (precip48hMm > 15 && windMph > 12)) return WaterClarity.Muddy;
+  if (totalRecent > 3 || precip48hMm > 8 || windMph > 20) return WaterClarity.Stained;
   return WaterClarity.Clear;
+}
+
+export function deriveLightLevel(
+  timeOfDay: TimeBucket,
+  cloudCoverPercent: number,
+): LightLevel {
+  if (timeOfDay === TimeBucket.Night) return LightLevel.Dark;
+  if (timeOfDay === TimeBucket.Dawn || timeOfDay === TimeBucket.Evening) {
+    return cloudCoverPercent > 70 ? LightLevel.Dark : LightLevel.Low;
+  }
+  // Midday / Morning
+  if (cloudCoverPercent > 80) return LightLevel.Low;
+  if (cloudCoverPercent > 50) return LightLevel.Medium;
+  return LightLevel.High;
+}
+
+export function derivePressureTrend(
+  currentHpa: number,
+  weatherCode: string,
+): PressureTrend {
+  // Use weather description as a proxy for pressure trend since we can't get historical hourly pressure easily
+  const desc = weatherCode.toLowerCase();
+  if (desc.includes('rain') || desc.includes('storm') || desc.includes('shower') || desc.includes('drizzle')) {
+    return PressureTrend.Falling;
+  }
+  if (desc.includes('clear') || desc.includes('mainly')) {
+    return currentHpa > 1018 ? PressureTrend.Rising : PressureTrend.Stable;
+  }
+  return PressureTrend.Stable;
 }
 
 export function deriveConditions(
   lat: number,
   now: Date,
-  weather: WeatherData
+  weather: WeatherData,
 ): DerivedConditions {
   const avgTemp = (weather.tempHighF + weather.tempLowF) / 2;
   const month = now.getMonth() + 1;
+  const timeOfDay = deriveTimeBucket(now, weather.sunrise, weather.sunset);
+  const pressureTrend = derivePressureTrend(weather.pressureHpa, weather.weatherDescription);
+
+  // Frontal passage: big pressure change + precipitation or clearing
+  const isFrontalPassage = weather.precipLast24hMm > 5 && weather.pressureHpa > 1015;
+
+  // Stable period: no recent precip, moderate pressure, low wind
+  const isStablePeriod = weather.precipLast48hMm < 2 && weather.windSpeedMph < 10
+    && weather.pressureHpa > 1010 && weather.pressureHpa < 1025;
 
   return {
-    timeOfDay: deriveTimeBucket(now, weather.sunrise, weather.sunset),
+    timeOfDay,
     seasonPhase: deriveSeasonPhase(lat, month, avgTemp),
     waterTempEstimateF: estimateWaterTemp(weather.tempF, weather.tempHighF, weather.tempLowF),
-    clarity: deriveWaterClarity(weather.precipitationMm, weather.windSpeedMph),
+    clarity: deriveWaterClarity(weather.precipitationMm, weather.precipLast24hMm, weather.precipLast48hMm, weather.windSpeedMph),
+    lightLevel: deriveLightLevel(timeOfDay, weather.cloudCoverPercent),
+    pressureTrend,
+    isFrontalPassage,
+    isStablePeriod,
   };
 }

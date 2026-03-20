@@ -14,8 +14,8 @@ export default defineConfig({
         name: 'FishCast',
         short_name: 'FishCast',
         description: 'AI-powered fishing recommendations based on real-time conditions',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        theme_color: '#ffffff',
+        background_color: '#f9fafb',
         display: 'standalone',
         orientation: 'portrait',
         icons: [

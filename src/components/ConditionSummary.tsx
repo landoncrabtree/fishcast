@@ -1,70 +1,129 @@
-import type { DerivedConditions, WeatherData } from '../engine/types';
+import type { WeatherData, DerivedConditions } from '../engine/types';
 import { useAppStore } from '../store/app-store';
 
-function windDirectionLabel(deg: number): string {
+function windDir(deg: number): string {
   const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   return dirs[Math.round(deg / 45) % 8];
 }
 
-function tempDisplay(f: number, unit: 'F' | 'C'): string {
-  if (unit === 'C') return `${Math.round((f - 32) * (5 / 9))}°C`;
-  return `${Math.round(f)}°F`;
+function tempStr(f: number, unit: 'F' | 'C'): string {
+  if (unit === 'C') return `${Math.round((f - 32) * (5 / 9))}°`;
+  return `${Math.round(f)}°`;
 }
 
 export function ConditionSummary({ weather, derived }: { weather: WeatherData; derived: DerivedConditions }) {
   const unit = useAppStore((s) => s.settings.temperatureUnit);
   const location = useAppStore((s) => s.location);
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
   return (
-    <div className="bg-slate-800/50 backdrop-blur rounded-2xl p-5 border border-slate-700/50">
-      {location?.label && (
-        <div className="flex items-center gap-2 mb-3">
-          <svg className="w-4 h-4 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          <span className="text-sm text-slate-300 truncate">{location.label}</span>
+    <div className="space-y-4">
+      {/* Location + Temp hero */}
+      <div className="flex items-start justify-between">
+        <div>
+          {location?.label && (
+            <h2 className="text-xl font-bold text-gray-900">{location.label}</h2>
+          )}
+          <p className="text-sm text-gray-500">{dateStr} at {timeStr}</p>
         </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-slate-700/40 rounded-xl p-3">
-          <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Temperature</div>
-          <div className="text-2xl font-bold text-white">{tempDisplay(weather.tempF, unit)}</div>
-          <div className="text-xs text-slate-400 mt-0.5">
-            H: {tempDisplay(weather.tempHighF, unit)} · L: {tempDisplay(weather.tempLowF, unit)}
+        <div className="text-right">
+          <div className="text-5xl font-light text-gray-900 leading-none">
+            {tempStr(weather.tempF, unit)}
           </div>
-        </div>
-
-        <div className="bg-slate-700/40 rounded-xl p-3">
-          <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Wind</div>
-          <div className="text-2xl font-bold text-white">{Math.round(weather.windSpeedMph)}<span className="text-sm font-normal text-slate-400"> mph</span></div>
-          <div className="text-xs text-slate-400 mt-0.5">{windDirectionLabel(weather.windDirection)}</div>
-        </div>
-
-        <div className="bg-slate-700/40 rounded-xl p-3">
-          <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Water Temp (est.)</div>
-          <div className="text-lg font-semibold text-cyan-400">{tempDisplay(derived.waterTempEstimateF, unit)}</div>
-        </div>
-
-        <div className="bg-slate-700/40 rounded-xl p-3">
-          <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Conditions</div>
-          <div className="text-sm font-medium text-white">{derived.clarity} water</div>
-          <div className="text-xs text-slate-400 mt-0.5">{weather.cloudCoverPercent}% cloud</div>
+          <p className="text-sm text-gray-500 mt-1">{weather.weatherDescription}</p>
         </div>
       </div>
 
-      <div className="flex gap-2 mt-3">
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
-          {derived.timeOfDay}
-        </span>
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-          {derived.seasonPhase}
-        </span>
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">
-          {Math.round(weather.pressureHpa)} hPa
-        </span>
+      {/* 4 stat cards */}
+      <div className="grid grid-cols-4 gap-2">
+        <StatCard
+          icon={<FeelsIcon />}
+          label="Feels"
+          value={tempStr(weather.feelsLikeF, unit)}
+        />
+        <StatCard
+          icon={<WindIcon />}
+          label="Wind"
+          value={`${Math.round(weather.windSpeedMph)} ${windDir(weather.windDirection)}`}
+        />
+        <StatCard
+          icon={<HumidityIcon />}
+          label="Humidity"
+          value={`${Math.round(weather.humidityPercent)}%`}
+        />
+        <StatCard
+          icon={<CloudIcon />}
+          label="Clouds"
+          value={`${Math.round(weather.cloudCoverPercent)}%`}
+        />
+      </div>
+
+      {/* Fishing Conditions card */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-4">
+        <h3 className="text-base font-semibold text-gray-900 mb-3">Fishing Conditions</h3>
+        <div className="grid grid-cols-2 gap-y-2.5 gap-x-6">
+          <CondRow label="Time" value={derived.timeOfDay} />
+          <CondRow label="Season" value={derived.seasonPhase} />
+          <CondRow label="Water Temp" value={`~${tempStr(derived.waterTempEstimateF, unit)}${unit}`} />
+          <CondRow label="Clarity" value={derived.clarity} />
+          <CondRow label="Light" value={derived.lightLevel} />
+          <CondRow label="Pressure" value={derived.pressureTrend} />
+        </div>
       </div>
     </div>
+  );
+}
+
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="bg-emerald-50 rounded-xl py-3 px-2 flex flex-col items-center gap-1">
+      <span className="text-emerald-700">{icon}</span>
+      <span className="text-xs text-gray-500">{label}</span>
+      <span className="text-sm font-semibold text-gray-900">{value}</span>
+    </div>
+  );
+}
+
+function CondRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-center">
+      <span className="text-sm text-gray-500">{label}</span>
+      <span className="text-sm font-semibold text-gray-900">{value}</span>
+    </div>
+  );
+}
+
+// ── Icons ──
+function FeelsIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m8-9h1M3 12H2m15.364-6.364l.707.707M6.343 17.657l-.707.707m12.021 0l.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  );
+}
+
+function WindIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 8h13a3 3 0 110 6h-2M3 16h9a3 3 0 100-6M3 12h5" />
+    </svg>
+  );
+}
+
+function HumidityIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21.5c-3.6 0-6.5-2.9-6.5-6.5 0-4.5 6.5-12.5 6.5-12.5s6.5 8 6.5 12.5c0 3.6-2.9 6.5-6.5 6.5z" />
+    </svg>
+  );
+}
+
+function CloudIcon() {
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6.341 17.059a4.5 4.5 0 01-.847-8.956A5.5 5.5 0 0116.5 8.5h.5a4 4 0 014 4 4 4 0 01-4 4H7a.66.66 0 01-.659-.941" />
+    </svg>
   );
 }
