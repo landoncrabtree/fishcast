@@ -4,8 +4,10 @@ import {
   WaterClarity,
   LightLevel,
   PressureTrend,
+  type MaxDepth,
   type WeatherData,
   type DerivedConditions,
+  type BassPosition,
 } from '../engine/types';
 
 export function deriveTimeBucket(now: Date, sunrise: Date, sunset: Date): TimeBucket {
@@ -114,4 +116,80 @@ export function deriveConditions(
     isFrontalPassage,
     isStablePeriod,
   };
+}
+
+export function deriveBassPosition(derived: DerivedConditions, maxDepth: MaxDepth): BassPosition {
+  const isPond = maxDepth === 'Pond';
+  const deepLabel = isPond ? 'deeper pockets' : 'deep structure';
+  const midLabel = isPond ? 'center of pond' : 'mid-depth';
+
+  // Pressure and front adjustments
+  const pressureDeeper = derived.pressureTrend === PressureTrend.Rising || derived.isFrontalPassage;
+  const pressureShallower = derived.pressureTrend === PressureTrend.Falling;
+
+  switch (derived.seasonPhase) {
+    case SeasonPhase.Winter:
+      return {
+        zone: isPond ? 'Deepest available' : 'Deep',
+        reasoning: pressureShallower
+          ? `Winter — bass holding on ${deepLabel}, but falling pressure may push brief shallow feeding`
+          : `Winter — bass congregated on ${deepLabel}, slow and lethargic`,
+      };
+
+    case SeasonPhase.PreSpawn:
+      return {
+        zone: 'Shallow',
+        reasoning: pressureDeeper
+          ? 'Pre-spawn — bass staging near shallow flats, but high pressure keeping them cautious'
+          : 'Pre-spawn — bass moving shallow to stage on flats and points before bedding',
+      };
+
+    case SeasonPhase.Spawn:
+      return {
+        zone: 'Shallow',
+        reasoning: 'Spawn — bass on beds in 1-4ft of water, guarding nests near bank cover',
+      };
+
+    case SeasonPhase.PostSpawn: {
+      if (pressureDeeper) {
+        return {
+          zone: isPond ? 'Center / edges' : 'Mid-depth',
+          reasoning: `Post-spawn — females recovering near first drop-off at ${midLabel}, high pressure pushing them off bank`,
+        };
+      }
+      return {
+        zone: 'Shallow to mid',
+        reasoning: `Post-spawn — males still guarding fry in shallows, females near ${midLabel} recovering`,
+      };
+    }
+
+    case SeasonPhase.Summer: {
+      const isLowLight = derived.lightLevel === LightLevel.Low || derived.lightLevel === LightLevel.Dark;
+      if (isLowLight) {
+        return {
+          zone: 'Shallow',
+          reasoning: 'Summer low-light — bass push shallow to feed during dawn/dusk windows',
+        };
+      }
+      return {
+        zone: isPond ? 'Deepest available' : 'Deep',
+        reasoning: isPond
+          ? 'Summer midday — bass seek shade and the deepest pockets available in the pond'
+          : 'Summer midday — bass holding on deep ledges, points, and along the thermocline',
+      };
+    }
+
+    case SeasonPhase.FallTransition: {
+      if (derived.lightLevel === LightLevel.High && !pressureShallower) {
+        return {
+          zone: isPond ? 'Edges and cover' : 'Shallow to mid',
+          reasoning: `Fall — bass following baitfish, relating to ${isPond ? 'bank cover and shade' : 'creek channels and flats'}`,
+        };
+      }
+      return {
+        zone: 'Shallow',
+        reasoning: `Fall — bass aggressively chasing baitfish into ${isPond ? 'the shallows along the banks' : 'shallow creeks and flats'}`,
+      };
+    }
+  }
 }

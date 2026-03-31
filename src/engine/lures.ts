@@ -449,4 +449,168 @@ export const lures: LureDefinition[] = [
       return { points: pts, reasons: r };
     },
   },
+  {
+    id: 'weightless-senko',
+    name: 'Weightless Senko (Texas-Rigged)',
+    category: 'Soft Plastic',
+    score: (c, w) => {
+      let pts = 2;
+      const r: string[] = ['+2 base — universally effective bait'];
+
+      if (seasons(c, S.Spawn, S.PostSpawn)) { pts += 6; r.push('+6 spawn/post-spawn — senko near beds is deadly'); }
+      if (c.clarity === C.Clear) { pts += 4; r.push('+4 clear water — shimmy fall visible to bass'); }
+      if (c.clarity === C.Stained) { pts += 3; r.push('+3 stained water — bulky profile still draws bites'); }
+      if (c.pressureTrend === P.Rising || c.pressureTrend === P.Stable) { pts += 4; r.push('+4 rising/stable pressure — slow fall wins when bass won\'t chase'); }
+      if (c.isFrontalPassage) { pts += 4; r.push('+4 post-frontal — subtle presentation triggers reluctant bass'); }
+      if (w.windSpeedMph < 10) { pts += 2; r.push('+2 calm wind — feel the bite on slack line'); }
+      if (inRange(c.waterTempEstimateF, 55, 80)) { pts += 2; r.push('+2 versatile water temp range for senko fishing'); }
+
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'neko-rig',
+    name: 'Neko Rig',
+    category: 'Finesse',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+
+      if (c.pressureTrend === P.Rising) { pts += 6; r.push('+6 rising pressure — ultimate finesse presentation'); }
+      if (c.isFrontalPassage) { pts += 5; r.push('+5 post-frontal — gets bites when nothing else works'); }
+      if (c.clarity === C.Clear) { pts += 5; r.push('+5 clear water — subtle nose-down action looks natural'); }
+      if (c.isStablePeriod) { pts += 3; r.push('+3 stable period — pressured fish respond to finesse'); }
+      if (seasons(c, S.Spawn)) { pts += 4; r.push('+4 spawn — nose-down action near beds provokes strikes'); }
+      if (seasons(c, S.Summer)) { pts += 3; r.push('+3 summer — drag on deep structure for finicky bass'); }
+      if (w.windSpeedMph < 8) { pts += 2; r.push('+2 light wind — better feel for subtle bites'); }
+      if (inRange(c.waterTempEstimateF, 50, 75)) { pts += 2; r.push('+2 effective water temp range for neko rig'); }
+
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'inline-spinner',
+    name: 'Rooster Tail / Inline Spinner',
+    category: 'Reaction',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+
+      if (c.clarity === C.Stained) { pts += 5; r.push('+5 stained water — blade flash and vibration attract bass'); }
+      if (seasons(c, S.FallTransition)) { pts += 5; r.push('+5 fall — matches small baitfish patterns'); }
+      if (seasons(c, S.PreSpawn)) { pts += 4; r.push('+4 pre-spawn — bass feeding on emerging forage'); }
+      if (seasons(c, S.PostSpawn)) { pts += 4; r.push('+4 post-spawn — active feeding period after beds'); }
+      if (inRange(c.waterTempEstimateF, 50, 75)) { pts += 3; r.push('+3 optimal water temp range for inline spinner'); }
+      if (times(c, T.Morning, T.Evening)) { pts += 3; r.push('+3 transition light periods — blade flash most effective'); }
+      if (w.windSpeedMph > 5) { pts += 2; r.push('+2 wind helps mask presentation'); }
+      if (c.clarity === C.Muddy) { pts += 3; r.push('+3 muddy water — vibration helps bass locate spinner'); }
+      if (c.clarity === C.Clear) { pts -= 2; r.push('-2 clear water — bass can see it\'s artificial'); }
+      if (seasons(c, S.Winter) && c.waterTempEstimateF < 45) { pts -= 4; r.push('-4 too cold for reaction — bass lethargic in winter'); }
+
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'whopper-plopper',
+    name: 'Whopper Plopper / Prop Bait',
+    category: 'Topwater',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+
+      if (times(c, T.Dawn, T.Evening)) { pts += 7; r.push('+7 low light feeding windows — prime topwater time'); }
+      if (seasons(c, S.Summer, S.PostSpawn)) { pts += 5; r.push('+5 warm water topwater season — bass looking up'); }
+      if (c.waterTempEstimateF > 65) { pts += 4; r.push('+4 warm water — bass actively feeding on surface'); }
+      if (c.clarity === C.Stained) { pts += 4; r.push('+4 stained water — plopping noise draws fish from distance'); }
+      if (w.windSpeedMph < 10) { pts += 3; r.push('+3 calm conditions — surface action stays visible'); }
+      if (w.cloudCoverPercent > 60) { pts += 3; r.push('+3 cloud cover extends the topwater window'); }
+      if (c.pressureTrend === P.Falling) { pts += 2; r.push('+2 falling pressure — bass aggressive and willing to surface'); }
+      if (times(c, T.Midday) && c.lightLevel === L.High) { pts -= 4; r.push('-4 bright midday sun kills topwater bite'); }
+      if (c.waterTempEstimateF < 55) { pts -= 3; r.push('-3 too cold for surface strikes'); }
+
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'fluke',
+    name: 'Soft Jerkbait / Fluke',
+    category: 'Soft Plastic',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+
+      if (seasons(c, S.FallTransition)) { pts += 7; r.push('+7 fall — dying shad imitation matches the hatch'); }
+      if (c.clarity === C.Clear) { pts += 5; r.push('+5 clear water — realistic baitfish profile shines'); }
+      if (seasons(c, S.PostSpawn)) { pts += 5; r.push('+5 post-spawn — bass chasing shad fry in shallows'); }
+      if (c.clarity === C.Stained) { pts += 3; r.push('+3 stained water — erratic action still triggers bites'); }
+      if (times(c, T.Morning, T.Evening)) { pts += 3; r.push('+3 baitfish activity peaks at transitions'); }
+      if (w.windSpeedMph < 12) { pts += 2; r.push('+2 manageable wind — control the glide action'); }
+      if (inRange(c.waterTempEstimateF, 58, 82)) { pts += 2; r.push('+2 baitfish active temp range'); }
+      if (c.pressureTrend === P.Falling) { pts += 2; r.push('+2 falling pressure — bass chase moving baits'); }
+
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'swim-jig',
+    name: 'Swim Jig',
+    category: 'Jig',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+
+      if (seasons(c, S.Summer)) { pts += 6; r.push('+6 summer — swim through vegetation mats and grass lines'); }
+      if (seasons(c, S.PreSpawn)) { pts += 5; r.push('+5 pre-spawn — bass staging in shallow grass'); }
+      if (seasons(c, S.PostSpawn)) { pts += 4; r.push('+4 post-spawn — bass relating to cover'); }
+      if (c.clarity === C.Stained) { pts += 5; r.push('+5 stained water — profile and vibration in limited visibility'); }
+      if (c.clarity === C.Muddy) { pts += 3; r.push('+3 muddy water — trailer kick displaces water'); }
+      if (c.pressureTrend === P.Falling) { pts += 3; r.push('+3 falling pressure — bass feeding actively in cover'); }
+      if (w.cloudCoverPercent > 60) { pts += 3; r.push('+3 cloud cover — bass roam in and around cover'); }
+      if (w.windSpeedMph > 8) { pts += 2; r.push('+2 wind pushes baitfish to cover edges'); }
+      if (seasons(c, S.Winter) && c.waterTempEstimateF < 48) { pts -= 4; r.push('-4 too cold for swimming presentation'); }
+
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'medium-crankbait',
+    name: 'Medium Diving Crankbait',
+    category: 'Reaction',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+
+      if (seasons(c, S.PostSpawn)) { pts += 6; r.push('+6 post-spawn — bass transitioning from shallow to deep structure'); }
+      if (seasons(c, S.FallTransition)) { pts += 5; r.push('+5 fall — bass on mid-depth structure chasing baitfish'); }
+      if (seasons(c, S.PreSpawn)) { pts += 4; r.push('+4 pre-spawn — bass staging at mid-depth'); }
+      if (c.clarity === C.Stained) { pts += 4; r.push('+4 stained water — vibration and deflection trigger reaction'); }
+      if (w.windSpeedMph > 8) { pts += 3; r.push('+3 wind increases reaction bite potential'); }
+      if (inRange(c.waterTempEstimateF, 55, 80)) { pts += 2; r.push('+2 effective water temp range for mid-depth cranking'); }
+      if (w.cloudCoverPercent > 50) { pts += 2; r.push('+2 cloud cover — bass roam mid-depth'); }
+      if (c.clarity === C.Clear) { pts += 1; r.push('+1 clear water — still effective with natural color choices'); }
+      if (seasons(c, S.Winter) && c.waterTempEstimateF < 45) { pts -= 4; r.push('-4 too cold for cranking — bass lethargic'); }
+
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'underspin',
+    name: 'Underspin / Keel-Weighted Swimbait',
+    category: 'Reaction',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+
+      if (seasons(c, S.FallTransition)) { pts += 6; r.push('+6 fall — matches shad schools perfectly'); }
+      if (seasons(c, S.PostSpawn)) { pts += 5; r.push('+5 post-spawn — bass feeding on baitfish'); }
+      if (seasons(c, S.Summer)) { pts += 4; r.push('+4 summer — deep schooling bass on ledges'); }
+      if (c.clarity === C.Clear) { pts += 4; r.push('+4 clear water — flash and natural profile fool wary bass'); }
+      if (c.clarity === C.Stained) { pts += 3; r.push('+3 stained water — blade adds flash and vibration'); }
+      if (times(c, T.Morning, T.Evening)) { pts += 3; r.push('+3 transition periods — peak baitfish feeding activity'); }
+      if (inRange(c.waterTempEstimateF, 58, 82)) { pts += 2; r.push('+2 baitfish active temp range'); }
+      if (c.pressureTrend === P.Falling) { pts += 2; r.push('+2 falling pressure — aggressive feeding behavior'); }
+
+      return { points: pts, reasons: r };
+    },
+  },
 ];

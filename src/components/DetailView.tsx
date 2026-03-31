@@ -46,7 +46,7 @@ export function DetailView({ rec, onClose }: { rec: Recommendation; onClose: () 
           <div className="space-y-3">
             <DetailItem icon="🎣" label="Lure Type" value={rec.lureType} />
             <DetailItem icon="🎨" label="Color" value={rec.color} />
-            <DetailItem icon="🔄" label="Retrieve" value={rec.retrieve} />
+            <DetailItem icon="🔄" label="Retrieve" value={rec.retrieve} description={rec.retrieveDescription} />
             <DetailItem icon="📏" label="Depth / Zone" value={rec.depth} />
           </div>
 
@@ -72,7 +72,7 @@ export function DetailView({ rec, onClose }: { rec: Recommendation; onClose: () 
   );
 }
 
-function DetailItem({ icon, label, value }: { icon: string; label: string; value: string }) {
+function DetailItem({ icon, label, value, description }: { icon: string; label: string; value: string; description?: string }) {
   return (
     <div className="bg-white rounded-xl p-3.5 border border-gray-200">
       <div className="flex items-start gap-3">
@@ -80,6 +80,9 @@ function DetailItem({ icon, label, value }: { icon: string; label: string; value
         <div>
           <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">{label}</div>
           <div className="text-sm text-gray-900 font-medium">{value}</div>
+          {description && (
+            <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">{description}</p>
+          )}
         </div>
       </div>
     </div>

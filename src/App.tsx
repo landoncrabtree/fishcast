@@ -121,7 +121,12 @@ export default function App() {
         )}
 
         {/* Settings overlay */}
-        {showSettings && <Settings onClose={() => setShowSettings(false)} />}
+        {showSettings && (
+          <Settings onClose={() => {
+            setShowSettings(false);
+            refresh();
+          }} />
+        )}
       </div>
     </div>
   );

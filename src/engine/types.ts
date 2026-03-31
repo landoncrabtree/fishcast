@@ -41,6 +41,13 @@ export const PressureTrend = {
 } as const;
 export type PressureTrend = (typeof PressureTrend)[keyof typeof PressureTrend];
 
+export const MaxDepth = {
+  Pond: 'Pond',
+  Lake: 'Lake',
+  Reservoir: 'Reservoir',
+} as const;
+export type MaxDepth = (typeof MaxDepth)[keyof typeof MaxDepth];
+
 // ── Data models ──
 
 export interface LocationData {
@@ -80,6 +87,11 @@ export interface DerivedConditions {
   isStablePeriod: boolean;
 }
 
+export interface BassPosition {
+  zone: string;
+  reasoning: string;
+}
+
 export interface Condition {
   location: LocationData;
   timestamp: Date;
@@ -101,6 +113,7 @@ export interface Recommendation {
   lureType: string;
   color: string;
   retrieve: string;
+  retrieveDescription: string;
   depth: string;
   confidence: number; // 0-100 normalized
   totalPoints: number;
@@ -132,6 +145,7 @@ export interface ColorDefinition {
 export interface RetrieveDefinition {
   id: string;
   name: string;
+  description: string;
   score: ScoreFn;
 }
 
@@ -146,4 +160,6 @@ export type TemperatureUnit = 'F' | 'C';
 export interface AppSettings {
   species: string;
   temperatureUnit: TemperatureUnit;
+  maxDepth: MaxDepth;
+  waterClarityOverride: WaterClarity | 'Auto';
 }

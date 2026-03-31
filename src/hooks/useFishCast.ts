@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useAppStore } from '../store/app-store';
 import { getCurrentPosition, geocodeZipCode, reverseGeocode } from '../services/location-service';
 import { fetchWeather } from '../services/weather-service';
-import { deriveConditions } from '../services/condition-deriver';
+import { deriveConditions, deriveBassPosition } from '../services/condition-deriver';
 import { getRecommendations } from '../engine/recommendation-engine';
 import type { LocationData } from '../engine/types';
 
@@ -16,14 +16,23 @@ export function useFishCast() {
       store.setWeather(weather);
 
       const derived = deriveConditions(loc.lat, new Date(), weather);
+
+      // Apply clarity override if set
+      if (store.settings.waterClarityOverride !== 'Auto') {
+        derived.clarity = store.settings.waterClarityOverride;
+      }
+
       store.setDerived(derived);
+
+      const bassPos = deriveBassPosition(derived, store.settings.maxDepth);
+      store.setBassPosition(bassPos);
 
       const recs = getRecommendations({
         location: loc,
         timestamp: new Date(),
         weather,
         derived,
-      });
+      }, store.settings);
       store.setRecommendations(recs);
       store.setWeatherLoading(false);
     } catch (err) {

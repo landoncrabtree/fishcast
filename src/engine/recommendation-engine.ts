@@ -1,8 +1,15 @@
-import type { Condition, Recommendation, DerivedConditions, WeatherData } from './types';
+import type { Condition, Recommendation, DerivedConditions, WeatherData, AppSettings, MaxDepth } from './types';
 import { lures } from './lures';
 import { colors } from './colors';
 import { retrieves } from './retrieves-depths';
 import { depths } from './retrieves-depths';
+
+// Depth zones available for each max depth setting
+const allowedDepthZones: Record<MaxDepth, string[]> = {
+  Pond: ['surface', 'shallow'],
+  Lake: ['surface', 'shallow', 'mid-depth'],
+  Reservoir: ['surface', 'shallow', 'mid-depth', 'deep'],
+};
 
 interface ScoredItem {
   id: string;
@@ -49,6 +56,14 @@ const lureRetrieveAffinity: Record<string, string[]> = {
   'blade-bait': ['vertical-jig', 'yo-yo'],
   'swimbait': ['steady-medium', 'slow-roll'],
   'creature-bait': ['bottom-drag', 'deadstick'],
+  'weightless-senko': ['deadstick', 'slow-roll'],
+  'neko-rig': ['bottom-drag', 'deadstick'],
+  'inline-spinner': ['steady-medium', 'slow-roll', 'fast-burn'],
+  'whopper-plopper': ['steady-medium', 'slow-roll'],
+  'fluke': ['twitch-pause', 'deadstick', 'steady-medium'],
+  'swim-jig': ['swimming', 'steady-medium', 'slow-roll'],
+  'medium-crankbait': ['steady-medium', 'fast-burn'],
+  'underspin': ['swimming', 'steady-medium', 'slow-roll'],
 };
 
 const lureDepthAffinity: Record<string, string[]> = {
@@ -74,6 +89,14 @@ const lureDepthAffinity: Record<string, string[]> = {
   'blade-bait': ['deep'],
   'swimbait': ['mid-depth', 'shallow', 'deep'],
   'creature-bait': ['shallow', 'mid-depth'],
+  'weightless-senko': ['shallow', 'mid-depth'],
+  'neko-rig': ['shallow', 'mid-depth', 'deep'],
+  'inline-spinner': ['shallow', 'mid-depth'],
+  'whopper-plopper': ['surface'],
+  'fluke': ['surface', 'shallow', 'mid-depth'],
+  'swim-jig': ['shallow', 'mid-depth'],
+  'medium-crankbait': ['mid-depth', 'shallow'],
+  'underspin': ['mid-depth', 'shallow', 'deep'],
 };
 
 function generateTitle(lure: string, season: string): string {
@@ -84,13 +107,18 @@ function generateTitle(lure: string, season: string): string {
   return `${seasonClean} ${lureShort}`;
 }
 
-export function getRecommendations(condition: Condition, maxResults: number = 5): Recommendation[] {
+export function getRecommendations(condition: Condition, settings?: AppSettings, maxResults: number = 5): Recommendation[] {
   const { derived: c, weather: w } = condition;
+  const maxDepth = settings?.maxDepth ?? 'Reservoir';
+  const allowed = allowedDepthZones[maxDepth];
 
   const scoredLures = scoreAll(lures, c, w);
   const scoredColors = scoreAll(colors, c, w);
   const scoredRetrieves = scoreAll(retrieves, c, w);
-  const scoredDepths = scoreAll(depths, c, w);
+  const scoredDepths = scoreAll(depths, c, w).filter((d) => allowed.includes(d.id));
+
+  // Lookup for retrieve descriptions
+  const retrieveDescriptions = Object.fromEntries(retrieves.map((r) => [r.id, r.description]));
 
   // Generate candidate combinations from top lures
   const candidates: Recommendation[] = [];
@@ -104,9 +132,14 @@ export function getRecommendations(condition: Condition, maxResults: number = 5)
     const compatRetrieves = lureRetrieveAffinity[lure.id] ?? [];
     const bestRetrieve = scoredRetrieves.find((r) => compatRetrieves.includes(r.id)) ?? scoredRetrieves[0];
 
-    // Find best compatible depth
+    // Find best compatible depth (filtered to allowed zones)
     const compatDepths = lureDepthAffinity[lure.id] ?? [];
-    const bestDepth = scoredDepths.find((d) => compatDepths.includes(d.id)) ?? scoredDepths[0];
+    const compatAllowed = compatDepths.filter((d) => allowed.includes(d));
+    const bestDepth = scoredDepths.find((d) => compatAllowed.includes(d.id))
+      ?? scoredDepths[0];
+
+    // Skip lures with no usable depth zone (all affinities excluded and no fallback)
+    if (!bestDepth) continue;
 
     // Best color (all colors work with all lures)
     const bestColor = scoredColors[0];
@@ -143,6 +176,7 @@ export function getRecommendations(condition: Condition, maxResults: number = 5)
         lureType: lure.name,
         color: combo.color.name,
         retrieve: combo.retrieve.name,
+        retrieveDescription: retrieveDescriptions[combo.retrieve.id] ?? '',
         depth: combo.depth.name,
         totalPoints,
         confidence: 0, // normalized below

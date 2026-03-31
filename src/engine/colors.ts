@@ -157,4 +157,62 @@ export const colors: ColorDefinition[] = [
       return { points: pts, reasons: r };
     },
   },
+  {
+    id: 'smoke',
+    name: 'Smoke / Translucent',
+    score: (c) => {
+      let pts = 0;
+      const r: string[] = [];
+      if (c.clarity === C.Clear) { pts += 7; r.push('+7 nearly invisible — lets action do the work'); }
+      if (c.lightLevel === L.High) { pts += 3; r.push('+3 translucent won\'t spook in bright sun'); }
+      if (c.isStablePeriod) { pts += 2; r.push('+2 pressured fish need subtlety'); }
+      if (c.clarity === C.Stained) { pts -= 2; r.push('-2 too subtle, bass can\'t find it'); }
+      if (c.clarity === C.Muddy) { pts -= 4; r.push('-4 invisible in dirty water'); }
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'firetiger',
+    name: 'Firetiger',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+      if (c.clarity === C.Stained) { pts += 6; r.push('+6 high contrast pattern stands out'); }
+      if (c.clarity === C.Muddy) { pts += 4; r.push('+4 bright enough to see'); }
+      if (seasons(c, S.FallTransition)) { pts += 4; r.push('+4 matches perch/panfish forage'); }
+      if (seasons(c, S.PreSpawn)) { pts += 3; r.push('+3 effective reaction color in spring'); }
+      if (w.cloudCoverPercent > 60) { pts += 3; r.push('+3 reduced visibility, bold colors win'); }
+      if (c.clarity === C.Clear) { pts -= 2; r.push('-2 too garish, bass refuse it'); }
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'pumpkin-chartreuse',
+    name: 'Pumpkin / Chartreuse Tail',
+    score: (c) => {
+      let pts = 0;
+      const r: string[] = [];
+      if (c.clarity === C.Stained) { pts += 5; r.push('+5 chartreuse tip helps locate in limited vis'); }
+      if (c.clarity === C.Clear) { pts += 3; r.push('+3 natural body doesn\'t spook, tip helps track'); }
+      if (seasons(c, S.Spawn, S.PreSpawn)) { pts += 3; r.push('+3 crawfish tones with visibility kicker'); }
+      if (c.lightLevel === L.Low) { pts += 2; r.push('+2 chartreuse tip glows in low light'); }
+      if (seasons(c, S.Summer)) { pts += 2; r.push('+2 versatile warm-season color'); }
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'pearl-red-flake',
+    name: 'Pearl / Red Flake',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+      if (c.clarity === C.Clear) { pts += 4; r.push('+4 realistic baitfish belly'); }
+      if (seasons(c, S.PostSpawn, S.Summer)) { pts += 3; r.push('+3 shad belly match'); }
+      if (seasons(c, S.FallTransition)) { pts += 3; r.push('+3 dying shad often show red/pink'); }
+      if (c.lightLevel === L.High || c.lightLevel === L.Medium) { pts += 2; r.push('+2 light reveals pearl shimmer'); }
+      if (c.clarity === C.Stained) { pts += 2; r.push('+2 pearl still visible'); }
+      if (w.cloudCoverPercent < 50) { pts += 1; r.push('+1 sun activates pearl flash'); }
+      return { points: pts, reasons: r };
+    },
+  },
 ];

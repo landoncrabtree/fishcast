@@ -1,10 +1,13 @@
 import { useAppStore } from '../store/app-store';
-import type { TemperatureUnit } from '../engine/types';
+import type { TemperatureUnit, MaxDepth, WaterClarity } from '../engine/types';
 
 export function Settings({ onClose }: { onClose: () => void }) {
   const settings = useAppStore((s) => s.settings);
+  const derived = useAppStore((s) => s.derived);
   const setTemperatureUnit = useAppStore((s) => s.setTemperatureUnit);
   const setSpecies = useAppStore((s) => s.setSpecies);
+  const setMaxDepth = useAppStore((s) => s.setMaxDepth);
+  const setWaterClarityOverride = useAppStore((s) => s.setWaterClarityOverride);
 
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-auto">
@@ -24,6 +27,59 @@ export function Settings({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="flex-1 p-4 space-y-4">
+          {/* Max Depth */}
+          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-1">Water Depth</h3>
+            <p className="text-xs text-gray-400 mb-3">Filters lure and depth recommendations</p>
+            <div className="flex gap-2">
+              {([
+                { value: 'Pond' as MaxDepth, label: 'Pond', hint: '≤5ft' },
+                { value: 'Lake' as MaxDepth, label: 'Lake', hint: '≤12ft' },
+                { value: 'Reservoir' as MaxDepth, label: 'Reservoir', hint: 'All' },
+              ]).map(({ value, label, hint }) => (
+                <button
+                  key={value}
+                  onClick={() => setMaxDepth(value)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    settings.maxDepth === value
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {label}
+                  <span className={`block text-[10px] mt-0.5 ${settings.maxDepth === value ? 'text-emerald-100' : 'text-gray-400'}`}>
+                    {hint}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Water Clarity */}
+          <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-1">Water Clarity</h3>
+            <p className="text-xs text-gray-400 mb-3">
+              {settings.waterClarityOverride === 'Auto' && derived
+                ? `Auto-detected: ${derived.clarity} (based on weather)`
+                : 'Override the weather-based estimate'}
+            </p>
+            <div className="flex gap-2">
+              {(['Auto', 'Clear', 'Stained', 'Muddy'] as (WaterClarity | 'Auto')[]).map((clarity) => (
+                <button
+                  key={clarity}
+                  onClick={() => setWaterClarityOverride(clarity)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    settings.waterClarityOverride === clarity
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {clarity}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Temperature Unit */}
           <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200">
             <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-3">Temperature Unit</h3>

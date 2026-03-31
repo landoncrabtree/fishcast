@@ -17,6 +17,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'slow-roll',
     name: 'Slow Roll',
+    description: 'Reel just fast enough to keep the blade(s) spinning or the bait moving. Let it bump along near the bottom or through cover. Think "barely moving" — you should feel the blades thumping.',
     score: (c, w) => {
       let pts = 0;
       const r: string[] = [];
@@ -30,6 +31,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'steady-medium',
     name: 'Steady Retrieve',
+    description: 'Cast out and reel back at a consistent, medium pace — no pauses, no jerks. Let the lure do the work. This is your default "just reel it in" retrieve for crankbaits and swimbaits.',
     score: (c) => {
       let pts = 0;
       const r: string[] = [];
@@ -43,6 +45,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'fast-burn',
     name: 'Fast / Burn',
+    description: 'Reel as fast as you can while keeping the bait in the water. Triggers reaction strikes from aggressive bass that can\'t resist chasing. Great for covering water quickly.',
     score: (c, w) => {
       let pts = 0;
       const r: string[] = [];
@@ -57,6 +60,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'twitch-pause',
     name: 'Twitch-Twitch-Pause',
+    description: 'Two sharp snaps of the rod tip, then let the bait sit still for 2-10 seconds. The pause is when the bite happens — watch your line. Longer pauses in colder water.',
     score: (c) => {
       let pts = 0;
       const r: string[] = [];
@@ -70,6 +74,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'yo-yo',
     name: 'Yo-Yo / Rip and Drop',
+    description: 'Rip the rod tip up sharply to lift the bait off the bottom, then let it flutter back down on slack line. Most strikes come on the fall. Great over submerged grass.',
     score: (c) => {
       let pts = 0;
       const r: string[] = [];
@@ -82,6 +87,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'bottom-drag',
     name: 'Slow Drag / Bottom Contact',
+    description: 'Drag the bait along the bottom with your rod tip, then reel up slack. Keep contact with the bottom at all times — feel for rocks, shells, and wood. Pause when you feel something.',
     score: (c) => {
       let pts = 0;
       const r: string[] = [];
@@ -95,6 +101,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'walk-the-dog',
     name: 'Walk-the-Dog',
+    description: 'With a slack line, snap your rod tip down in a rhythmic cadence. The bait will zig-zag side to side on the surface. Keep a steady rhythm — snap, pause, snap, pause.',
     score: (c, w) => {
       let pts = 0;
       const r: string[] = [];
@@ -108,6 +115,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'pop-pause',
     name: 'Pop-Pop-Pause',
+    description: 'Give two short, sharp pops with your rod tip to make the bait spit water, then let it sit still for 3-5 seconds. The rings on the water draw bass in, and the pause triggers the strike.',
     score: (c, w) => {
       let pts = 0;
       const r: string[] = [];
@@ -121,6 +129,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'vertical-jig',
     name: 'Vertical Jigging',
+    description: 'Position directly above the fish. Drop the bait straight down, pop it up 1-2 feet with the rod tip, and let it fall back on semi-slack line. Best from a boat over deep structure.',
     score: (c) => {
       let pts = 0;
       const r: string[] = [];
@@ -133,6 +142,7 @@ export const retrieves: RetrieveDefinition[] = [
   {
     id: 'deadstick',
     name: 'Deadstick / Natural Fall',
+    description: 'Cast it out and do almost nothing. Let the bait sink on slack or semi-slack line — the natural shimmy and fall does the work. Watch your line for any twitch or movement, that\'s a bite.',
     score: (c) => {
       let pts = 0;
       const r: string[] = [];
@@ -140,6 +150,24 @@ export const retrieves: RetrieveDefinition[] = [
       if (c.isFrontalPassage) { pts += 5; r.push('+5 post-frontal — bass won\'t chase, let it sit'); }
       if (c.clarity === C.Clear) { pts += 3; r.push('+3 clear water — natural fall looks realistic'); }
       if (seasons(c, S.Spawn)) { pts += 3; r.push('+3 spawn — wacky/Senko fall irresistible near beds'); }
+      return { points: pts, reasons: r };
+    },
+  },
+  {
+    id: 'swimming',
+    name: 'Swimming / Steady Swim',
+    description: 'Reel at a medium pace to keep the jig or bait swimming through the water column. Let it tick the tops of grass or brush. Keep your rod tip up and maintain contact — bites feel like a sudden heaviness.',
+    score: (c, w) => {
+      let pts = 0;
+      const r: string[] = [];
+      if (seasons(c, S.Summer)) { pts += 5; r.push('+5 summer — swim through vegetation'); }
+      if (seasons(c, S.PostSpawn)) { pts += 4; r.push('+4 post-spawn — bass relating to shallow cover'); }
+      if (seasons(c, S.PreSpawn)) { pts += 3; r.push('+3 pre-spawn — staging in grass'); }
+      if (c.clarity === C.Stained) { pts += 3; r.push('+3 stained — profile/vibration matters'); }
+      if (c.pressureTrend === P.Falling) { pts += 3; r.push('+3 falling pressure — bass aggressive in cover'); }
+      if (c.waterTempEstimateF > 55) { pts += 2; r.push('+2 need some warmth for active bass'); }
+      if (w.windSpeedMph > 8) { pts += 2; r.push('+2 wind positions bait near cover'); }
+      if (seasons(c, S.Winter) && c.waterTempEstimateF < 48) { pts -= 3; r.push('-3 too cold for swimming retrieve'); }
       return { points: pts, reasons: r };
     },
   },

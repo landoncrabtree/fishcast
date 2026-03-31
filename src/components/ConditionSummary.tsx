@@ -14,6 +14,7 @@ function tempStr(f: number, unit: 'F' | 'C'): string {
 export function ConditionSummary({ weather, derived }: { weather: WeatherData; derived: DerivedConditions }) {
   const unit = useAppStore((s) => s.settings.temperatureUnit);
   const location = useAppStore((s) => s.location);
+  const bassPosition = useAppStore((s) => s.bassPosition);
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -72,6 +73,21 @@ export function ConditionSummary({ weather, derived }: { weather: WeatherData; d
           <CondRow label="Pressure" value={derived.pressureTrend} />
         </div>
       </div>
+
+      {/* Bass Position insight */}
+      {bassPosition && (
+        <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-lg leading-none mt-0.5">🐟</span>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">
+                Bass are likely <span className="text-emerald-700 lowercase">{bassPosition.zone}</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-1 leading-relaxed">{bassPosition.reasoning}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
